@@ -1,11 +1,22 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './App.scss';
+import cn from 'classnames';
 
-// import usersFromServer from './api/users';
-// import productsFromServer from './api/products';
-// import categoriesFromServer from './api/categories';
+import usersFromServer from './api/users';
+import productsFromServer from './api/products';
+import categoriesFromServer from './api/categories';
+
+function findCategoryById(id: number | undefined) {
+  return categoriesFromServer.find((category) => category.id === id);
+}
+
+function findUserById(id: number | undefined) {
+  return usersFromServer.find((user) => user.id === id);
+}
 
 export const App: React.FC = () => {
+  const [activeUserFilter] = useState();
+
   return (
     <div className="section">
       <div className="container">
@@ -16,6 +27,21 @@ export const App: React.FC = () => {
             <p className="panel-heading">Filters</p>
 
             <p className="panel-tabs has-text-weight-bold">
+              {usersFromServer.map((user) => (
+                <a
+                  data-cy="FilterUser"
+                  href="#/"
+                  // onClick={(event: React.MouseEvent) => {
+                  //   setActiveUserFilter(event.currentTarget.);
+                  // }}
+                  className={cn(
+                    { 'is-active': activeUserFilter === user.name },
+                  )}
+                >
+                  {user.name}
+                </a>
+              ))}
+
               <a
                 data-cy="FilterAllUsers"
                 href="#/"
@@ -187,6 +213,32 @@ export const App: React.FC = () => {
             </thead>
 
             <tbody>
+              {productsFromServer.map((product) => {
+                const category = findCategoryById(product.categoryId);
+                const user = findUserById(category?.ownerId);
+
+                return (
+                  <tr>
+                    <td className="has-text-weight-bold" data-cy="ProductId">
+                      {product.id}
+                    </td>
+
+                    <td data-cy="ProductName">{product.name}</td>
+                    <td data-cy="ProductCategory">{`${category?.icon} - ${category?.title}`}</td>
+
+                    <td
+                      data-cy="ProductUser"
+                      className={cn(
+                        { 'has-text-link': user?.sex === 'm' },
+                        { 'has-text-danger': user?.sex === 'f' },
+                      )}
+                    >
+                      {user?.name}
+                    </td>
+                  </tr>
+                );
+              })}
+
               <tr data-cy="Product">
                 <td className="has-text-weight-bold" data-cy="ProductId">
                   1
