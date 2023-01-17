@@ -6,6 +6,12 @@ import usersFromServer from './api/users';
 import productsFromServer from './api/products';
 import categoriesFromServer from './api/categories';
 
+// interface User {
+//   id: number,
+//   name: string,
+//   sex: string,
+// }
+
 function findCategoryById(id: number | undefined) {
   return categoriesFromServer.find((category) => category.id === id);
 }
@@ -15,7 +21,25 @@ function findUserById(id: number | undefined) {
 }
 
 export const App: React.FC = () => {
-  const [activeUserFilter] = useState();
+  const [activeUserFilter, setActiveUserFilter] = useState('');
+  const [filteredProducts, setFilteredProducts] = useState(productsFromServer);
+  const handleUserFilter = (userName: string) => {
+    setActiveUserFilter(userName);
+    if (userName === '') {
+      setFilteredProducts(productsFromServer);
+
+      return;
+    }
+
+    setFilteredProducts(productsFromServer.filter((product) => {
+      const category = findCategoryById(product.categoryId);
+      const userToMatch = findUserById(category?.ownerId);
+
+      return (
+        userToMatch?.name === userName
+      );
+    }));
+  };
 
   return (
     <div className="section">
@@ -27,13 +51,22 @@ export const App: React.FC = () => {
             <p className="panel-heading">Filters</p>
 
             <p className="panel-tabs has-text-weight-bold">
+              <a
+                data-cy="FilterAllUsers"
+                href="#/"
+                onClick={() => handleUserFilter('')}
+                className={cn(
+                  { 'is-active': activeUserFilter === '' },
+                )}
+              >
+                All
+              </a>
+
               {usersFromServer.map((user) => (
                 <a
                   data-cy="FilterUser"
                   href="#/"
-                  // onClick={(event: React.MouseEvent) => {
-                  //   setActiveUserFilter(event.currentTarget.);
-                  // }}
+                  onClick={() => handleUserFilter(user.name)}
                   className={cn(
                     { 'is-active': activeUserFilter === user.name },
                   )}
@@ -41,35 +74,6 @@ export const App: React.FC = () => {
                   {user.name}
                 </a>
               ))}
-
-              <a
-                data-cy="FilterAllUsers"
-                href="#/"
-              >
-                All
-              </a>
-
-              <a
-                data-cy="FilterUser"
-                href="#/"
-              >
-                User 1
-              </a>
-
-              <a
-                data-cy="FilterUser"
-                href="#/"
-                className="is-active"
-              >
-                User 2
-              </a>
-
-              <a
-                data-cy="FilterUser"
-                href="#/"
-              >
-                User 3
-              </a>
             </p>
 
             <div className="panel-block">
@@ -213,7 +217,8 @@ export const App: React.FC = () => {
             </thead>
 
             <tbody>
-              {productsFromServer.map((product) => {
+
+              {filteredProducts.map((product) => {
                 const category = findCategoryById(product.categoryId);
                 const user = findUserById(category?.ownerId);
 
